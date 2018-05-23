@@ -1,0 +1,86 @@
+var page = 1; //第几页开始
+var maxPage = 377; //第几页结束，此值可以设置，如果需要爬取完全可以设置
+var content = "\uFEFF";
+//给EXCEL加标题
+content += (["" + "仓库名", "销售记录编号","库存sku", "quantity", "支付时间", "是否有货"].join(','));
+								content += "\n";
+
+function todo() {
+	try {
+		$.get("http://www.mabangerp.com/index.php?mod=order.orderSearch", {
+			"page": page
+		}, function(data, status) {
+			const theData = JSON.parse(data);
+			console.log("加载第", page, "页数据", ",共" + (theData.pageCount / 50) + "页", status);
+			if (status == "success") {
+				const orders = theData.orderDataList;
+				orders.forEach(function(order) {
+					order.orderItem_data_list.forEach(function(sku) {
+						var productDate = order.paidTime;
+						var productStatus = sku.hasGoods;
+						if (timeScope(productDate) && isLackProduct(productStatus)) {
+							if (sku.warehouseName == "上海自建仓-澄建路") {
+								content += (["" + sku.warehouseName, order.salesRecordNumber, sku.stockSku, sku.quantity, order.paidTime, sku.hasGoods == 1 ? '有货' : '没货'].join(','));
+								content += "\n";
+							} else {
+								content += (["" + sku.warehouseName, order.salesRecordNumber, sku.stockSku, sku.quantity, order.paidTime, sku.hasGoods == 1 ? '有货' : '没货'].join(','));
+								content += "\n";
+							}
+						}
+					});
+				});
+			}
+
+			if (page < maxPage) {
+				page++;
+				todo();
+			} else {
+				console.log("数据抓取完成，开始下载文件")
+				var csvData = new Blob([content], {
+					type: 'text/csv'
+				});
+				var a = document.createElement('a');
+				a.href = URL.createObjectURL(csvData);
+				a.target = '_blank';
+				a.download = 'info.csv';
+				document.body.appendChild(a);
+				console.log(a);
+				a.click();
+				document.body.removeChild(a);
+			}
+
+		})
+	} catch (e) {
+		console.log(e);
+	}
+}
+
+//时间范围判断
+function timeScope(productDate) {
+	var myDate = new Date();
+
+	var beginval = productDate.split(" ")[0]; //这个时间可以是日期控件选择的，也可以是其他的任何日期时间
+	var endval = myDate.toLocaleString().split(" ")[0];; //这个时间可以是日期控件选择的，也可以是其他的任何日期时间
+	var date1 = new Date(beginval);
+	var date2 = new Date(endval);
+	var curVal = (Date.parse(date2) - Date.parse(date1)) / 1000 / 60 / 60 / 24;
+	if (curVal < 0) {
+		console.log('开始时间不能大于结束时间！');
+		return false;
+	} else if (curVal <= 7) {
+		console.log('在时间范围内！');
+		return true;
+	} else {
+		console.log('请选择7天以内的时间段！');
+		return false;
+	}
+}
+
+//是否有货判断
+function isLackProduct(productStatus) {
+	if (productStatus == 1) {
+		return false; //有货
+	}
+	return true;
+}
+todo();
