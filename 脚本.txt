@@ -1,0 +1,21 @@
+注意使用这个脚本之前需要将分页值设置为50，默认的是100，如果不自动设置，将会导致爬取结果不完整，因为他分页也是50的，默认的一百其实是在50的基础上做了个next查询。
+
+mysql -hlocalhost -uroot -proot
+use crawler;
+
+#删除数据库中的记录
+#SET SQL_SAFE_UPDATES=0;
+
+#delete from crawler.check_erp;
+
+1、将csv导入mysql 
+load data local infile 'C:\\Users\\Administrator\\excel\\CheckERP\\info.csv' into table check_erp fields terminated by ',' ENCLOSED BY '"' lines terminated by '\n';
+
+2、执行数据库，查询操作
+SELECT warehouseName,stockSku,sum(quantity),left(paidTime, 10) as dateTime FROM crawler.check_erp  group by stockSku,dateTime order by warehouseName,dateTime; 
+
+
+
+2-1按照sku汇总缺货数量，他们需要的版本
+select warehouseName,stockSku,sum(quantity)  from check_erp group by stockSku order by warehouseName,stockSku;
+

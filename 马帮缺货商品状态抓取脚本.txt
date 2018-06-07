@@ -1,9 +1,16 @@
 var page = 1; //第几页开始
 var maxPage = 377; //第几页结束，此值可以设置，如果需要爬取完全可以设置
+
+var startDate=new Date("2018/04/01");
+var myDate = new Date();
+var endDate=myDate.toLocaleString().split(" ")[0];//当前时间
+var gapDate=6;//设置间隔时间，一般是7天
+var checkGap=(Date.parse(endDate) -Date.parse(startDate)) / 1000 / 60 / 60 / 24-gapDate;//得到当前日期-7天之后，再减去起始日期的时间间隔。
+
 var content = "\uFEFF";
 //给EXCEL加标题
-content += (["" + "仓库名", "销售记录编号","库存sku", "quantity", "支付时间", "是否有货"].join(','));
-								content += "\n";
+//content += (["" + "仓库名", "销售记录编号","库存sku", "quantity", "支付时间", "是否有货"].join(','));
+	//							content += "\n";
 
 function todo() {
 	try {
@@ -12,23 +19,23 @@ function todo() {
 		}, function(data, status) {
 			const theData = JSON.parse(data);
 			console.log("加载第", page, "页数据", ",共" + (theData.pageCount / 50) + "页", status);
-			if (status == "success") {
+			//之前的条件是status == "success"
+			if (1==1) {
 				const orders = theData.orderDataList;
 				orders.forEach(function(order) {
-					order.orderItem_data_list.forEach(function(sku) {
+					    order.orderItem_data_list.forEach(function(sku) {
 						var productDate = order.paidTime;
 						var productStatus = sku.hasGoods;
 						if (timeScope(productDate) && isLackProduct(productStatus)) {
-							if (sku.warehouseName == "上海自建仓-澄建路") {
-								content += (["" + sku.warehouseName, order.salesRecordNumber, sku.stockSku, sku.quantity, order.paidTime, sku.hasGoods == 1 ? '有货' : '没货'].join(','));
-								content += "\n";
-							} else {
+							if (sku.warehouseName == "上海自建仓-澄建路" ||sku.warehouseName =="马帮自建仓-九新公路") {
 								content += (["" + sku.warehouseName, order.salesRecordNumber, sku.stockSku, sku.quantity, order.paidTime, sku.hasGoods == 1 ? '有货' : '没货'].join(','));
 								content += "\n";
 							}
 						}
 					});
 				});
+			}else{
+				
 			}
 
 			if (page < maxPage) {
@@ -60,18 +67,12 @@ function timeScope(productDate) {
 	var myDate = new Date();
 
 	var beginval = productDate.split(" ")[0]; //这个时间可以是日期控件选择的，也可以是其他的任何日期时间
-	var endval = myDate.toLocaleString().split(" ")[0];; //这个时间可以是日期控件选择的，也可以是其他的任何日期时间
 	var date1 = new Date(beginval);
-	var date2 = new Date(endval);
-	var curVal = (Date.parse(date2) - Date.parse(date1)) / 1000 / 60 / 60 / 24;
-	if (curVal < 0) {
-		console.log('开始时间不能大于结束时间！');
-		return false;
-	} else if (curVal <= 7) {
-		console.log('在时间范围内！');
+	var curVal = (Date.parse(date1) - Date.parse(startDate)) / 1000 / 60 / 60 / 24;//当前产品日期减去起始日期
+
+	if (curVal <= checkGap&&curVal>=0) {
 		return true;
 	} else {
-		console.log('请选择7天以内的时间段！');
 		return false;
 	}
 }
@@ -81,6 +82,6 @@ function isLackProduct(productStatus) {
 	if (productStatus == 1) {
 		return false; //有货
 	}
-	return true;
+	return true;//不为1，缺货
 }
 todo();
