@@ -1,3 +1,5 @@
+//http://www.mabangerp.com/index.php?mod=order.list&Order_orderStatus=2，订单Tab中点击配货中，注意页数选择50.
+
 var page = 1; //第几页开始
 var maxPage = 377; //第几页结束，此值可以设置，如果需要爬取完全可以设置
 
@@ -20,23 +22,20 @@ function todo() {
 			const theData = JSON.parse(data);
 			console.log("加载第", page, "页数据", ",共" + (theData.pageCount / 50) + "页", status);
 			//之前的条件是status == "success"
-			if (1==1) {
-				const orders = theData.orderDataList;
-				orders.forEach(function(order) {
-					    order.orderItem_data_list.forEach(function(sku) {
-						var productDate = order.paidTime;
-						var productStatus = sku.hasGoods;
-						if (timeScope(productDate) && isLackProduct(productStatus)) {
-							if (sku.warehouseName == "上海自建仓-澄建路" ||sku.warehouseName =="马帮自建仓-九新公路") {
-								content += (["" + sku.warehouseName, order.salesRecordNumber, sku.stockSku, sku.quantity, order.paidTime, sku.hasGoods == 1 ? '有货' : '没货'].join(','));
-								content += "\n";
-							}
+			const orders = theData.orderDataList;
+			orders.forEach(function(order) {
+				order.orderItem_data_list.forEach(function(sku) {
+				var productDate = order.paidTime;
+				var productStatus = sku.hasGoods;
+				if (timeScope(productDate) && isLackProduct(productStatus)) {
+					if (sku.warehouseName == "上海自建仓-澄建路" ||sku.warehouseName =="马帮自建仓-九新公路") {
+						content += (["" + sku.warehouseName, order.salesRecordNumber, sku.stockSku, sku.quantity, order.paidTime, sku.hasGoods == 1 ? '有货' : '没货'].join(','));
+						content += "\n";
 						}
-					});
+					}
 				});
-			}else{
-				
-			}
+			});
+
 
 			if (page < maxPage) {
 				page++;

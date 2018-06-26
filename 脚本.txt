@@ -4,18 +4,21 @@ mysql -hlocalhost -uroot -proot
 use crawler;
 
 #删除数据库中的记录
-#SET SQL_SAFE_UPDATES=0;
+SET SQL_SAFE_UPDATES=0;
 
-#delete from crawler.check_erp;
+delete from crawler.check_erp;
 
 1、将csv导入mysql 
 load data local infile 'C:\\Users\\Administrator\\excel\\CheckERP\\info.csv' into table check_erp fields terminated by ',' ENCLOSED BY '"' lines terminated by '\n';
 
-2、执行数据库，查询操作
-SELECT warehouseName,stockSku,sum(quantity),left(paidTime, 10) as dateTime FROM crawler.check_erp  group by stockSku,dateTime order by warehouseName,dateTime; 
 
 
+#按时间汇总
+SELECT warehouseName,stockSku,sum(quantity),left(paidTime, 10) as 'dateTime' FROM crawler.check_erp  group by stockSku,dateTime order by warehouseName,dateTime; 
 
-2-1按照sku汇总缺货数量，他们需要的版本
-select warehouseName,stockSku,sum(quantity)  from check_erp group by stockSku order by warehouseName,stockSku;
+#按照sku导出汇总缺货信息
+select warehouseName,stockSku,sum(quantity) as '缺货数量' from check_erp group by stockSku order by warehouseName,stockSku;
+
+#制作数组
+select concat(",'",stockSku,"'") from check_erp group by stockSku order by warehouseName,stockSku;
 
